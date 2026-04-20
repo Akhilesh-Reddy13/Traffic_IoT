@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Real-time traffic density monitoring and dynamic signal control powered by YOLOv8 and ESP32-CAM" />
+    <title>Traffic Density Controller</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+    <!-- ─── HEADER ──────────────────────────────────────── -->
+    <header id="header">
+        <div class="header-left">
+            <div class="logo-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="6" y="1" width="12" height="22" rx="3"/>
+                    <circle cx="12" cy="6" r="2"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="12" cy="18" r="2"/>
+                </svg>
+            </div>
+            <div>
+                <h1>Traffic Density Controller</h1>
+                <p class="subtitle">Real-time vehicle detection &amp; adaptive signal control</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="stat-chip" id="fpsChip">
+                <span class="stat-label">FPS</span>
+                <span class="stat-value" id="fpsValue">--</span>
+            </div>
+            <div class="stat-chip" id="vehicleChip">
+                <span class="stat-label">Vehicles</span>
+                <span class="stat-value" id="totalVehicles">0</span>
+            </div>
+            <div class="status-dot-wrap">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusLabel">Connecting…</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ─── MAIN GRID ───────────────────────────────────── -->
+    <main id="mainGrid">
+        <!-- LEFT: Video Feed -->
+        <section class="card video-card" id="videoCard">
+            <div class="card-header">
+                <h2>📹 Live Detection Feed</h2>
+                <span class="badge" id="sourceBadge">Video File</span>
+            </div>
+            <div class="video-wrapper" id="videoWrapper">
+                <img id="videoFrame" alt="Detection feed" />
+                <div class="video-overlay" id="videoOverlay">
+                    <div class="spinner"></div>
+                    <p>Waiting for video stream…</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT: Controls Panel -->
+        <aside class="controls-panel">
+            <!-- Traffic Signals -->
+            <section class="card signal-card" id="signalCard">
+                <div class="card-header"><h2>🚦 Traffic Signals</h2></div>
+                <div class="signals-grid">
+                    <!-- Direction A -->
+                    <div class="signal-unit" id="signalA">
+                        <div class="signal-label">Direction A</div>
+                        <div class="traffic-light">
+                            <div class="light red" id="lightA_red"></div>
+                            <div class="light yellow" id="lightA_yellow"></div>
+                            <div class="light green" id="lightA_green"></div>
+                        </div>
+                        <div class="signal-timer" id="timerA">--</div>
+                        <div class="signal-green-alloc">Green: <span id="allocA">10</span>s</div>
+                    </div>
+                    <!-- Direction B -->
+                    <div class="signal-unit" id="signalB">
+                        <div class="signal-label">Direction B</div>
+                        <div class="traffic-light">
+                            <div class="light red" id="lightB_red"></div>
+                            <div class="light yellow" id="lightB_yellow"></div>
+                            <div class="light green" id="lightB_green"></div>
+                        </div>
+                        <div class="signal-timer" id="timerB">--</div>
+                        <div class="signal-green-alloc">Green: <span id="allocB">10</span>s</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Lane Density -->
+            <section class="card density-card" id="densityCard">
+                <div class="card-header"><h2>📊 Lane Density</h2></div>
+                <div class="density-bars">
+                    <div class="density-row">
+                        <span class="density-label">Direction A</span>
+                        <div class="bar-track">
+                            <div class="bar-fill" id="barA" style="width:0%"></div>
+                        </div>
+                        <span class="density-count" id="countA">0</span>
+                        <span class="density-badge" id="badgeA">empty</span>
+                    </div>
+                    <div class="density-row">
+                        <span class="density-label">Direction B</span>
+                        <div class="bar-track">
+                            <div class="bar-fill" id="barB" style="width:0%"></div>
+                        </div>
+                        <span class="density-count" id="countB">0</span>
+                        <span class="density-badge" id="badgeB">empty</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Density History Chart -->
+            <section class="card chart-card" id="chartCard">
+                <div class="card-header"><h2>📈 Density History</h2></div>
+                <canvas id="densityChart" width="400" height="150"></canvas>
+            </section>
+
+            <!-- Settings -->
+            <section class="card settings-card" id="settingsCard">
+                <div class="card-header clickable" id="settingsToggle">
+                    <h2>⚙️ Settings</h2>
+                    <span class="toggle-icon" id="settingsIcon">▼</span>
+                </div>
+                <div class="settings-body" id="settingsBody">
+                    <label>
+                        Video Source
+                        <input type="text" id="inputSource" placeholder="http://192.168.1.100:81/stream" />
+                    </label>
+                    <label>
+                        Confidence Threshold
+                        <input type="range" id="inputConf" min="0.1" max="0.9" step="0.05" value="0.4" />
+                        <span id="confValue">0.40</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="inputGpu" />
+                        Use GPU (CUDA)
+                    </label>
+                    <button id="btnApply" class="btn-primary">Apply Settings</button>
+                </div>
+            </section>
+        </aside>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>
