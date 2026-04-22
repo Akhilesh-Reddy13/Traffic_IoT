@@ -6,7 +6,7 @@ import os
 
 # ─── Video Source ───────────────────────────────────────────────
 # ESP32-CAM stream URL or local video file path for testing
-VIDEO_SOURCE = os.getenv("VIDEO_SOURCE", "test_video.mp4")
+VIDEO_SOURCE = os.getenv("VIDEO_SOURCE", "http://10.24.175.158:81/stream")
 
 # ─── Model Settings ────────────────────────────────────────────
 USE_GPU = os.getenv("USE_GPU", "false").lower() == "true"

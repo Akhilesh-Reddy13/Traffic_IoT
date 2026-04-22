@@ -24,8 +24,8 @@
 #include <WiFi.h>
 
 // ─── WiFi credentials (EDIT THESE) ─────────────────────────
-const char* ssid     = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
+const char* ssid     = "Abhinand's wifi";
+const char* password = "12345678";
 
 // ─── Camera model ───────────────────────────────────────────
 #define CAMERA_MODEL_AI_THINKER
