@@ -5,8 +5,10 @@ Override settings via environment variables or modify defaults here.
 import os
 
 # ─── Video Source ───────────────────────────────────────────────
-# ESP32-CAM stream URL or local video file path for testing
-VIDEO_SOURCE = os.getenv("VIDEO_SOURCE", "http://10.24.175.158:81/stream")
+# ESP32-CAM stream URL or local MP4 file path for testing
+VIDEO_SOURCE = os.getenv(
+    "VIDEO_SOURCE", os.path.join(os.path.dirname(__file__), "sample_input.mp4")
+)
 
 # ─── Model Settings ────────────────────────────────────────────
 USE_GPU = os.getenv("USE_GPU", "false").lower() == "true"
